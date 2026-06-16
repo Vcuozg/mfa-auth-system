@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  email           String    @unique
+  password_hash   String
+  mfa_secret      String?
+  mfa_enabled     Boolean   @default(false)
+  failed_attempts Int       @default(0)
+  locked_until    DateTime?
+  role            String    @default("USER")
+  created_at      DateTime  @default(now())
+
+  login_logs LoginLog[]
+}
+
+model LoginLog {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  ip_address String
+  user_agent String
+  status     String
+  login_time DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+}
