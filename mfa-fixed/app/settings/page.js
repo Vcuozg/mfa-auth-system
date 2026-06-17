@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
 const rules = [
@@ -15,6 +16,8 @@ export default function SettingsPage() {
   const [user, setUser] = useState(null);
   const [oldPw, setOldPw] = useState("");
   const [newPw, setNewPw] = useState("");
+  const [showOldPw, setShowOldPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
   const [message, setMessage] = useState("");
   const [msgOk, setMsgOk] = useState(false);
 
@@ -29,15 +32,19 @@ export default function SettingsPage() {
 
   async function changePassword(e) {
     e.preventDefault();
+
     const res = await fetch("/api/auth/change-password", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ oldPassword: oldPw, newPassword: newPw }),
     });
+
     const data = await res.json();
+
     setMsgOk(res.ok);
     setMessage(data.message);
+
     if (res.ok) {
       setOldPw("");
       setNewPw("");
@@ -47,12 +54,15 @@ export default function SettingsPage() {
   async function disableMFA() {
     if (!confirm("Tắt xác thực 2 lớp? Tài khoản của bạn sẽ kém an toàn hơn."))
       return;
+
     const res = await fetch("/api/auth/disable-mfa", {
       method: "POST",
       credentials: "include",
     });
+
     const data = await res.json();
     alert(data.message);
+
     if (res.ok) window.location.reload();
   }
 
@@ -65,10 +75,53 @@ export default function SettingsPage() {
   }
 
   const strength = rules.filter((r) => r.test(newPw)).length;
+
   const strengthColor =
     ["bg-red-500", "bg-orange-500", "bg-yellow-500", "bg-emerald-400"][
       strength - 1
     ] || "bg-white/10";
+
+  function EyeIcon() {
+    return (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+        />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+        />
+      </svg>
+    );
+  }
+
+  function EyeOffIcon() {
+    return (
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9.27-3.11-11-7a11.15 11.15 0 012.67-3.8m3.25-2.11A9.77 9.77 0 0112 5c5 0 9.27 3.11 11 7a11.05 11.05 0 01-4.22 4.86M15 12a3 3 0 00-3-3m0 0a3 3 0 00-3 3m3-3l9 9M3 3l18 18"
+        />
+      </svg>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0f1e] flex">
@@ -91,6 +144,7 @@ export default function SettingsPage() {
           </div>
           <span className="text-white font-semibold text-sm">Hệ thống MFA</span>
         </div>
+
         {[
           { h: "/dashboard", l: "🏠 Tổng quan" },
           { h: "/security", l: "🛡️ Bảo mật" },
@@ -100,11 +154,16 @@ export default function SettingsPage() {
           <a
             key={n.h}
             href={n.h}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${n.a ? "bg-white/10 text-white" : "text-slate-400 hover:text-white hover:bg-white/5"}`}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              n.a
+                ? "bg-white/10 text-white"
+                : "text-slate-400 hover:text-white hover:bg-white/5"
+            }`}
           >
             {n.l}
           </a>
         ))}
+
         <div className="mt-auto pt-4 border-t border-white/5">
           <button
             onClick={logout}
@@ -114,9 +173,11 @@ export default function SettingsPage() {
           </button>
         </div>
       </aside>
+
       <main className="flex-1 p-8 overflow-auto">
         <div className="max-w-lg mx-auto">
           <h1 className="text-2xl font-semibold text-white mb-1">Cài đặt</h1>
+
           <p className="text-slate-400 text-sm mb-8">
             Quản lý bảo mật tài khoản của bạn
           </p>
@@ -125,25 +186,35 @@ export default function SettingsPage() {
             <h2 className="text-white font-medium text-sm mb-4">
               Thông tin tài khoản
             </h2>
+
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-sm">Email</span>
                 <span className="text-white text-sm">{user?.email}</span>
               </div>
+
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-sm">Xác thực 2 lớp</span>
                 <span
-                  className={`text-sm font-medium ${user?.mfa_enabled ? "text-emerald-400" : "text-red-400"}`}
+                  className={`text-sm font-medium ${
+                    user?.mfa_enabled ? "text-emerald-400" : "text-red-400"
+                  }`}
                 >
                   {user?.mfa_enabled ? "Đã bật" : "Chưa bật"}
                 </span>
               </div>
+
               <div className="flex justify-between items-center">
                 <span className="text-slate-400 text-sm">
                   Số lần đăng nhập sai
                 </span>
+
                 <span
-                  className={`text-sm ${user?.failed_attempts > 0 ? "text-red-400" : "text-slate-300"}`}
+                  className={`text-sm ${
+                    user?.failed_attempts > 0
+                      ? "text-red-400"
+                      : "text-slate-300"
+                  }`}
                 >
                   {user?.failed_attempts ?? 0}
                 </span>
@@ -155,40 +226,71 @@ export default function SettingsPage() {
             <h2 className="text-white font-medium text-sm mb-4">
               Đổi mật khẩu
             </h2>
+
             <form onSubmit={changePassword} className="space-y-3">
-              <input
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-blue-500/60 transition text-sm"
-                type="password"
-                placeholder="Mật khẩu hiện tại"
-                value={oldPw}
-                onChange={(e) => setOldPw(e.target.value)}
-                required
-              />
-              <input
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none focus:border-blue-500/60 transition text-sm"
-                type="password"
-                placeholder="Mật khẩu mới"
-                value={newPw}
-                onChange={(e) => setNewPw(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <input
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-500 outline-none focus:border-blue-500/60 transition text-sm"
+                  type={showOldPw ? "text" : "password"}
+                  placeholder="Mật khẩu hiện tại"
+                  value={oldPw}
+                  onChange={(e) => setOldPw(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowOldPw(!showOldPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                >
+                  {showOldPw ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <input
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder-slate-500 outline-none focus:border-blue-500/60 transition text-sm"
+                  type={showNewPw ? "text" : "password"}
+                  placeholder="Mật khẩu mới"
+                  value={newPw}
+                  onChange={(e) => setNewPw(e.target.value)}
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw(!showNewPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                >
+                  {showNewPw ? <EyeOffIcon /> : <EyeIcon />}
+                </button>
+              </div>
+
               {newPw && (
                 <div className="flex gap-1">
                   {[0, 1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className={`h-1 flex-1 rounded-full transition-all ${i < strength ? strengthColor : "bg-white/10"}`}
+                      className={`h-1 flex-1 rounded-full transition-all ${
+                        i < strength ? strengthColor : "bg-white/10"
+                      }`}
                     />
                   ))}
                 </div>
               )}
+
               <button className="w-full bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-medium py-3 rounded-xl transition text-sm">
                 Cập nhật mật khẩu
               </button>
             </form>
+
             {message && (
               <div
-                className={`mt-3 rounded-xl px-4 py-3 text-sm ${msgOk ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-red-500/10 border border-red-500/20 text-red-400"}`}
+                className={`mt-3 rounded-xl px-4 py-3 text-sm ${
+                  msgOk
+                    ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400"
+                    : "bg-red-500/10 border border-red-500/20 text-red-400"
+                }`}
               >
                 {message}
               </div>
@@ -199,9 +301,11 @@ export default function SettingsPage() {
             <h2 className="text-red-400 font-medium text-sm mb-1">
               Vùng nguy hiểm
             </h2>
+
             <p className="text-slate-500 text-xs mb-4">
               Thao tác này sẽ xóa bảo vệ MFA của bạn
             </p>
+
             <button
               onClick={disableMFA}
               className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 font-medium py-3 rounded-xl transition text-sm"
